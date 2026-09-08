@@ -10,13 +10,13 @@ resource-flow.etzhayyim.com — 公的団体 **+ 民間法人** の 12 resource 
 | Worker | LIVE | `worker/` (ADR-0036 Worker-direct, host-sdk subscribeRepos consumer) |
 | NSID | 8 | `getSankey` / `listFlows` / `projectFlow` / `registerEmitter` / `getActorLabels` / `detectAnomaly` / `listAnomalies` / `reviewAnomaly` |
 | BPMN | 2 | `registerEmitter.bpmn` + `detectAnomaly.bpmn` (timer-start `R/PT24H`, ADR-0046) |
-| AppView | sankey + anomaly tabs | `appview/resource-flow-ui-r3s0fl0w/svelte/` — Svelte 5, d3-sankey, `?tab=sankey\|anomaly` URL-state, severity-coloured anomaly table with ACK/DIS/ESC inline review buttons (Phase 15), bulk DID → label via `getActorLabels`, reviewed-state join via `mv_resource_flow_anomaly_review_latest` (Phase 16'): open/closed/any filter, row dimming, Status badge showing last action |
+| AppView | sankey + anomaly tabs | `src/cloud_itonami/app_resource_flow/` — CLJS (shadow-cljs + reagent + kotoba-ui), pure-CLJS sankey layout, `?tab=sankey\|anomaly` URL-state, severity-coloured anomaly table with ACK/DIS/ESC inline review buttons (Phase 15), bulk DID → label via `getActorLabels`, reviewed-state join via `mv_resource_flow_anomaly_review_latest` (Phase 16'): open/closed/any filter, row dimming, Status badge showing last action |
 | Graph | 3 vertex + 3 sankey MV | `vertex_resource_flow_{currency,service,personnel}` + `mv_resource_flow_sankey_*` (rebuilt ADR-0074, key on `COALESCE(root_did, source_did)`) |
 | Pilot emitters | 1 | `did:web:yadoya.etzhayyim.com` (hospitality cluster, ISIC I5510) |
 | Chain profiles | 12 | `did:web:hospitality.etzhayyim.com:actor:chain:*` minted in `vertex_profile` (external RWE; ERC725 root not applicable, stays facade-only) |
 | MCP facade | enabled | `APP_MCP_REGISTRY=1` — sankey + listFlows surface as MCP tools |
 | ERC725 alignment (ADR-0074) | facade-only | All 3 cluster tables carry `root_did` / `facade_did` / `counterparty_root_did` / `migration_status`. lexicons accept optional `sourceRootDid` / `counterpartyRootDid`. Auth team backfill via `migrate-rw-erc725-root.mjs` once `etzhayyimRootIdentity` contracts for emitters are registered. |
-| AppView (Svelte) | scaffold | `appview/resource-flow-ui-r3s0fl0w/svelte/` (Svelte 5 runes + d3-sankey). Worker `assets` binding mounts `./dist` at `/` with SPA fallback. Counterparty labels via `app.bsky.actor.getProfile`. |
+| AppView (CLJS) | shadow-cljs :app build | `web/index.html` + `web/dist/js/main.js`; Worker `assets` binding mounts `./web/dist`. Counterparty labels via bulk `getActorLabels` (ADR-0074) with `app.bsky.actor.getProfile` fallback. |
 
 ## Identity
 

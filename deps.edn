@@ -1,0 +1,14 @@
+{:paths ["src"]
+ ;; Frontend deps (shadow-cljs :cljs alias). appkit transitively pulls
+ ;; kotoba-ui → liquid-glass-ui → shitsuke — same convention as
+ ;; orgs/kotoba-lang/murakumo-studio/deps.edn. local/root path is relative
+ ;; to this repo's checkout location: the shared checkout
+ ;; orgs/cloud-itonami/app-resource-flow and the worktree
+ ;; orgs/cloud-itonami/_wt-app-resource-flow sit at the same depth, so
+ ;; ../../kotoba-lang/appkit resolves in both (proven pattern:
+ ;; cloud-itonami/rare-earth, cloud-itonami/app-kaigo).
+ :aliases
+ {:cljs
+  {:extra-deps {thheller/shadow-cljs {:mvn/version "2.28.20"}
+                reagent/reagent {:mvn/version "1.2.0"}
+                io.github.kotoba-lang/appkit {:local/root "../../kotoba-lang/appkit"}}}}}

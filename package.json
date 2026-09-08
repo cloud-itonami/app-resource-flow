@@ -1,0 +1,12 @@
+{
+  "name": "app-resource-flow",
+  "version": "1.0.0",
+  "description": "Resource Flow (r3s0fl0w) — sankey + anomaly appview UI (shadow-cljs + reagent + kotoba-ui)",
+  "main": "index.js",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}
