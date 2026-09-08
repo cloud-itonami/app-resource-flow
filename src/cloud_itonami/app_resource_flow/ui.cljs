@@ -11,7 +11,7 @@
   cloud-itonami.rare-earth.ui. Sankey.svelte's d3 DOM painting becomes
   hiccup :svg nodes over state/sankey-layout."
   (:require [appkit.core :as shape]
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [cloud-itonami.app-resource-flow.state :as st]))
 
 (def css-text

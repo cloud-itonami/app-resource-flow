@@ -13,7 +13,7 @@
   event_count, observed_value…) — the camelCase->kebab kebabizer leaves
   those untouched, so edge/anomaly access uses :snake_keywords; only
   genuinely camelCase fields (displayName, reviewId…) become kebab."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [goog.object :as gobj]
             [reagent.core :as r]))
 
