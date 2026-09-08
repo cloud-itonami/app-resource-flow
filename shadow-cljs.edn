@@ -1,0 +1,13 @@
+;; shadow-cljs build for the app-resource-flow (resource-flow-ui-r3s0fl0w) UI.
+;; Mirrors orgs/kotoba-lang/murakumo-studio/shadow-cljs.edn and
+;; orgs/cloud-itonami/app-kaigo/shadow-cljs.edn:
+;; CLJS + reagent on kotoba-ui.core + appkit.core (murakumo-studio構成).
+{:deps {:aliases [:cljs]}
+ :nrepl {:port 9634}
+
+ :builds
+ {:app
+  {:target :browser
+   :output-dir "web/dist/js"
+   :asset-path "js"
+   :modules {:main {:init-fn cloud-itonami.app-resource-flow.desktop/init!}}}}}
