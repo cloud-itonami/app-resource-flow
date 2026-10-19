@@ -1,0 +1,60 @@
+(ns cloud-itonami.app-resource-flow.flow
+  "Resource Flow 判定コア（appview 側）。flow 検証（anomaly）と sankey node value。
+
+  セマンティクスの正本は aiueos/resource_flow_journal.cljk（aiueos guest。
+  `amu test` が jvm-kir / js / wasm の 3 ターゲットで同じ fixture を実行する）。
+  この namespace は appview 用の map API アダプタで、fixture の数値は guest の
+  test-* と一致させている（parity fixture）。判定は pure、副作用なし。
+
+  validate-flows のエラービット（0 = 正常。条件は重複しうる）:
+    1 :empty        flow が無い
+    2 :bad-length   入力が壊れている（guest ではバッファ長が 3 の倍数でない）
+    4 :negative     amount が負（anomaly）
+    8 :zero-amount  amount が 0（anomaly）
+   16 :self-flow    source = target
+
+  node-value は sankey レイアウト規則 node value = max(Σin, Σout)
+  （state.cljk の sankey-layout 注釈に一致）。")
+
+(def error-bits
+  {:empty 1
+   :bad-length 2
+   :negative 4
+   :zero-amount 8
+   :self-flow 16})
+
+(defn- flow-bits
+  "1 flow ぶんのエラービット。"
+  [{:keys [source target amount]}]
+  (cond
+    (neg? amount) (:negative error-bits)
+    (zero? amount) (:zero-amount error-bits)
+    (= source target) (:self-flow error-bits)
+    :else 0))
+
+(defn validate-flows
+  "flow のシーケンス（各 {:source s :target t :amount a}）を検証しエラービットを返す。"
+  [flows]
+  (if (empty? flows)
+    (:empty error-bits)
+    (reduce + 0 (map flow-bits flows))))
+
+(defn node-in
+  "node を target とする flow の amount 合計。"
+  [flows node]
+  (reduce + 0 (map :amount (filter #(= node (:target %)) flows))))
+
+(defn node-out
+  "node を source とする flow の amount 合計。"
+  [flows node]
+  (reduce + 0 (map :amount (filter #(= node (:source %)) flows))))
+
+(defn node-value
+  "sankey node value = max(Σin, Σout)。"
+  [flows node]
+  (max (node-in flows node) (node-out flows node)))
+
+(defn net-position
+  "Σin − Σout。"
+  [flows node]
+  (- (node-in flows node) (node-out flows node)))

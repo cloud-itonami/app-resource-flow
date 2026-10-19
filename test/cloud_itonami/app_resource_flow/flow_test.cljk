@@ -1,0 +1,39 @@
+(ns cloud-itonami.app-resource-flow.flow-test
+  "flow の parity fixture。数値は aiueos/resource_flow_journal.cljk の
+  test-* と一致させている（guest 側が 3 ターゲットで同じ期待を通す）。"
+  (:require [cljs.test :refer [deftest is testing]]
+            [cloud-itonami.app-resource-flow.flow :as f]))
+
+(deftest validate-flows-bits
+  (testing "正常な flow 群は 0"
+    (is (= 0 (f/validate-flows [{:source 0 :target 1 :amount 50}
+                                {:source 1 :target 2 :amount 30}]))))
+  (testing "空は :empty"
+    (is (= 1 (f/validate-flows []))))
+  (testing "負の amount は :negative"
+    (is (= 4 (f/validate-flows [{:source 0 :target 1 :amount -50}]))))
+  (testing "0 amount は :zero-amount"
+    (is (= 8 (f/validate-flows [{:source 0 :target 1 :amount 50}
+                                {:source 1 :target 2 :amount 0}]))))
+  (testing "self flow は :self-flow"
+    (is (= 16 (f/validate-flows [{:source 0 :target 1 :amount 50}
+                                 {:source 2 :target 2 :amount 30}])))))
+
+(deftest node-in-out-parity
+  (testing "guest の test-node-in-out と同じ 110"
+    (is (= 110 (+ (f/node-in [{:source 0 :target 1 :amount 50}
+                              {:source 2 :target 1 :amount 30}] 1)
+                  (f/node-out [{:source 0 :target 1 :amount 50}
+                               {:source 1 :target 2 :amount 30}] 1))))))
+
+(deftest node-value-parity
+  (testing "guest の test-node-value と同じ 80（max(Σin, Σout)）"
+    (is (= 80 (f/node-value [{:source 0 :target 1 :amount 50}
+                             {:source 2 :target 1 :amount 30}
+                             {:source 1 :target 2 :amount 30}] 1)))))
+
+(deftest net-position-parity
+  (testing "guest の test-net-position と同じ 50"
+    (is (= 50 (f/net-position [{:source 0 :target 1 :amount 50}
+                               {:source 2 :target 1 :amount 30}
+                               {:source 1 :target 2 :amount 30}] 1)))))

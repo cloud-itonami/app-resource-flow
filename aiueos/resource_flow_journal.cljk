@@ -1,0 +1,113 @@
+(ns resource-flow.journal
+  "app-resource-flow 会計ドメイン判定コア — aiueos guest（pure, :effects #{}）。
+
+  Resource Flow の判断: flow 群の異常検出（anomaly）と sankey node value。
+  I/O・XRPC・review はこの guest の外（design 正本: docs/resource-flow-aiueos-dapp.md）。
+  すべて i64 平坦バッファ（aiueos 境界規約: host が flat record を積み、kotoba が判定）。
+
+  バッファ布局: [source-node target-node amount] × n flow
+  node は i64 の索引（DID 解決は host 側の仕事）。amount は正の整数。
+
+  validate-flows のエラービット（0 = 正常。条件は重複しうる）:
+    1 :empty        flow が無い
+    2 :bad-length   長さが 3 の倍数でない（壊れた入力）
+    4 :negative     amount が負（anomaly）
+    8 :zero-amount  amount が 0（anomaly）
+   16 :self-flow    source = target
+
+  node-value は sankey レイアウト規則 node value = max(Σin, Σout)
+  （state.cljk の sankey-layout 注釈に一致）。
+
+  テストは export されたゼロ引数 test-*（戻り 1/0。true 返しは通らない）:
+  <amu> test aiueos/resource_flow_journal.cljk"
+  (:export [main validate-flows node-in node-out node-value net-position
+            test-valid-flows test-empty test-bad-length test-negative
+            test-zero-amount test-self-flow test-node-in-out
+            test-node-value test-net-position]))
+
+(defn main [] :i64
+  0)
+
+;; --- flow 群の検証: [src dst amount] × n ---------------------------------
+
+(defn validate-flows [buf :vector-i64] :i64
+  (let [n (vector-count buf)]
+    (if (= n 0)
+      1
+      (if (= n (* 3 (quot n 3)))
+        (validate-flows-at buf n 0 0)
+        2))))
+
+(defn- validate-flows-at [buf :vector-i64 n :i64 i :i64 bad :i64] :i64
+  (if (< i n)
+    (let [src (vector-at buf i)
+          dst (vector-at buf (+ i 1))
+          amt (vector-at buf (+ i 2))]
+      (validate-flows-at buf n (+ i 3)
+                         (if (< amt 0)
+                           (+ bad 4)
+                           (if (= amt 0)
+                             (+ bad 8)
+                             (if (= src dst)
+                               (+ bad 16)
+                               bad)))))
+    bad))
+
+;; --- node 集計: node は 0 始まりの i64 索引 --------------------------------
+
+(defn node-in [buf :vector-i64 node :i64] :i64
+  (node-sum buf (vector-count buf) node 1 0 0))
+
+(defn node-out [buf :vector-i64 node :i64] :i64
+  (node-sum buf (vector-count buf) node 0 0 0))
+
+(defn- node-sum [buf :vector-i64 n :i64 node :i64 want :i64 i :i64 acc :i64] :i64
+  ;; want=1 なら target 一致（in）、want=0 なら source 一致（out）
+  (if (< i n)
+    (node-sum buf n node want (+ i 3)
+              (if (= (if (= want 1) (vector-at buf (+ i 1)) (vector-at buf i)) node)
+                (+ acc (vector-at buf (+ i 2)))
+                acc))
+    acc))
+
+(defn node-value [buf :vector-i64 node :i64] :i64
+  (let [in (node-in buf node)
+        out (node-out buf node)]
+    (if (> in out) in out)))
+
+(defn net-position [buf :vector-i64 node :i64] :i64
+  (- (node-in buf node) (node-out buf node)))
+
+;; --- tests（戻り 1 = pass） ----------------------------------------------
+
+(defn test-valid-flows [] :i64
+  (if (= (validate-flows [0 1 50 1 2 30]) 0) 1 0))
+
+(defn test-empty [] :i64
+  (if (= (validate-flows []) 1) 1 0))
+
+(defn test-bad-length [] :i64
+  (if (= (validate-flows [0 1 50 1 2]) 2) 1 0))
+
+(defn test-negative [] :i64
+  (if (= (validate-flows [0 1 -50]) 4) 1 0))
+
+(defn test-zero-amount [] :i64
+  (if (= (validate-flows [0 1 50 1 2 0]) 8) 1 0))
+
+(defn test-self-flow [] :i64
+  (if (= (validate-flows [0 1 50 2 2 30]) 16) 1 0))
+
+(defn test-node-in-out [] :i64
+  (if (= (+ (node-in [0 1 50 2 1 30] 1)
+            (node-out [0 1 50 1 2 30] 1))
+         110)
+    1 0))
+
+(defn test-node-value [] :i64
+  ;; node 1: in=80 (50+30), out=30 → value は max(80,30)=80
+  (if (= (node-value [0 1 50 2 1 30 1 2 30] 1) 80) 1 0))
+
+(defn test-net-position [] :i64
+  ;; node 1: in=80, out=30 → 50
+  (if (= (net-position [0 1 50 2 1 30 1 2 30] 1) 50) 1 0))

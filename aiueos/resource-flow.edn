@@ -1,0 +1,23 @@
+;; app-resource-flow — itonami（dapp）の aiueos アプリ記述子
+;; （形は kotoba-lang/aiueos/examples/apps/notes.edn 準拠）。
+;; 実装の正本: resource_flow_journal.cljk / docs/resource-flow-aiueos-dapp.md。
+;;
+;; 判断コア guest（:effects #{}）を指す。imports 無し——flow 検証と node 集計は
+;; 計算だけで、XRPC・subscribeRepos・review はこの外の層。
+;; aiueos session/grant への配線は未実装（docs の未実装境界を参照）。
+{:aiueos/component :app/resource-flow
+ :aiueos/kind :app
+ :aiueos/trust :untrusted
+ :aiueos/source "resource_flow_journal.cljk"
+ :aiueos/wasm "resource_flow_journal.wasm"
+ :aiueos/entry "main"
+ :aiueos/args []
+ :aiueos/imports #{}
+ :aiueos/exports #{:app/main
+                   :app/validate-flows
+                   :app/node-in
+                   :app/node-out
+                   :app/node-value
+                   :app/net-position}
+ :aiueos/effects #{}
+ :aiueos/limits {:memory-pages 16 :fuel 5000000}}
