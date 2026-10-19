@@ -1,0 +1,10 @@
+(ns run-tests
+  "kbb 実行のテスト runner（npm test から呼ばれる）。
+  guest 側ゲートは amu test（aiueos/resource_flow_journal.cljk、3 ターゲット）。
+  ここでは appview adapter の parity fixture を回す。"
+  (:require [cljs.test :refer [run-tests]]
+            [cloud-itonami.app-resource-flow.flow-test]))
+
+(let [{:keys [fail error]} (run-tests 'cloud-itonami.app-resource-flow.flow-test)]
+  (when (pos? (+ fail error))
+    (set! (.-exitCode js/process) 1)))
