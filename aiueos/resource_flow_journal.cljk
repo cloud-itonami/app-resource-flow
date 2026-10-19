@@ -3,7 +3,9 @@
 
   Resource Flow の判断: flow 群の異常検出（anomaly）と sankey node value。
   I/O・XRPC・review はこの guest の外（design 正本: docs/resource-flow-aiueos-dapp.md）。
-  すべて i64 平坦バッファ（aiueos 境界規約: host が flat record を積み、kotoba が判定）。
+  入力は i64 ベクトルの平坦布局（[source-node target-node amount] × n）。
+  vector 型を使うため KIR v4 / kotoba.typed/externref-v1（typed-value ABI）で、
+  実行 host は kototama-browser-host-v1（amu selfhost の typed ホスト）。
 
   バッファ布局: [source-node target-node amount] × n flow
   node は i64 の索引（DID 解決は host 側の仕事）。amount は正の整数。
