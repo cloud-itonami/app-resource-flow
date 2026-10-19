@@ -49,3 +49,15 @@ app-resource-flow は itonami（dapp）の app bundle であり、独立 dapp �
 2. anomaly の時系列 threshold 判定を guest に追加（移動平均 + 閾値の純粋関数）。
 3. flow record の awai network 配置（mon/ito/nuno 割り当て）を ADR 0005 の
    線で確定。
+
+
+## 実行 host と ABI（訂正: 2026-10-19、JUN-125）
+
+guest は vector パラメータを使うため **KIR v4 / `kotoba.typed/externref-v1`**
+（typed-value ABI）で、「平坦 i64」はレイアウトの話であって ABI の話ではない。
+実行 host は契約どおり **kototama-browser-host-v1**（amu selfhost、
+`amu/runtime/browser-host.mjs` の typed ホスト）。aiueos の Chicory kernel
+ホストは typed ホストを持たず、kernel 経路では名前付き link 拒否
+（kotoba-lang/aiueos の itonami-dapp-bundle-test に pin 済み）。L2 の証拠
+（admission → selfhost 実行）は同 repo の itonami-dapp-selfhost-test。
+なお credits の guest はスカラーのみのため KIR v3 / `kotoba.i64/direct-v1`。
